@@ -13,7 +13,11 @@ class Mistral:
         self.model = AutoPeftModelForCausalLM.from_pretrained("ScoChillOFF/hse_ai_assistant")
         self.tokenizer = AutoTokenizer.from_pretrained("ScoChillOFF/hse_ai_assistant")
 
-    def predict(self, solution_row: pd.Series, tasks_df: pd.DataFrame, tests_df: pd.DataFrame, injection_protect: bool = False) -> str:
+    def predict(self,
+                solution_row: pd.Series,
+                tasks_df: pd.DataFrame,
+                tests_df: pd.DataFrame,
+                injection_protect: bool = False) -> str:
         task_id = solution_row['task_id']
         task_descr = tasks_df[tasks_df['id'] == task_id]['description'].values[0]
         author_solution = tasks_df[tasks_df['id'] == task_id]['author_solution'].values[0]
@@ -40,12 +44,22 @@ class Mistral:
 
 
 class TestModel:
-    def predict(self, solution_row: pd.Series, tasks_df: pd.DataFrame, tests_df: pd.DataFrame) -> str:
+    def predict(self,
+                solution_row: pd.Series,
+                tasks_df: pd.DataFrame,
+                tests_df: pd.DataFrame,
+                injection_protect: bool = False) -> str:
         task_id = solution_row['task_id']
         task_descr = tasks_df[tasks_df['id'] == task_id]['description'].values[0]
         author_solution = tasks_df[tasks_df['id'] == task_id]['author_solution'].values[0]
         tests = get_tests_for_task(tests_df, task_id)
         student_solution = solution_row["student_solution"]
         prompt_text = build_prompt(task_descr, student_solution, author_solution, tests)
+        if injection_protect:
+            from transformers import pipeline
+            translate = pipeline("translation", model="Helsinki-NLP/opus-mt-ru-en")
+            pipe = pipeline("text-classification", model="madhurjindal/Jailbreak-Detector-Large")
+            if pipe(translate(student_solution)[0]['translation_text'])[0]['label'] == "jailbreak":
+                return "Ошибка: подозрение на обход системы"
 
         return prompt_text[:1000]

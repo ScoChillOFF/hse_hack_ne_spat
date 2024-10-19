@@ -48,7 +48,10 @@ def generate_submit(test_solutions_path: str,
         idx = test_solutions.index[i]
         solution_row = test_solutions.iloc[i]
 
-        text = predict_func(solution_row=solution_row, test_tasks=test_tasks, test_tests=test_tests, injection_protect=injection_protect)  # here you can do absolute whatever you want
+        text = predict_func(solution_row=solution_row,
+                            tasks_df=test_tasks,
+                            tests_df=test_tests,
+                            injection_protect=injection_protect)  # here you can do absolute whatever you want
 
         embedding = embedding2string(get_sentence_embedding(text))
         submit_df.loc[i] = [idx, text, embedding]
