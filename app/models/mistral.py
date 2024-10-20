@@ -27,7 +27,7 @@ class Mistral:
             from transformers import pipeline
             translate = pipeline("translation", model="Helsinki-NLP/opus-mt-ru-en")
             pipe = pipeline("text-classification", model="madhurjindal/Jailbreak-Detector-Large")
-            if pipe(translate(student_solution)[0]['translation_text'])[0]['label'] == "jailbreak":
+            if pipe(translate(student_solution, max_length=512, truncation=True)[0]['translation_text'], max_length=512, truncation=True)[0]['label'] == "jailbreak":
                 return "Ошибка: подозрение на обход системы"
 
         prompt_text = build_prompt(task_descr, student_solution, author_solution, tests)
